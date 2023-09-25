@@ -2266,6 +2266,10 @@ function start_solr() {
     exit 1
   fi
 
+  export PYROSCOPE_APPLICATION_NAME=$PYRO_APP_NAME
+  export PYROSCOPE_SERVER_ADDRESS=$PYRO_ENDPOINT
+  export PYROSCOPE_PROFILER_LOCK="10ms"
+
   SOLR_START_OPTS=('-server' "${JAVA_MEM_OPTS[@]}" "${GC_TUNE[@]}" "${GC_LOG_OPTS[@]}" "${IP_ACL_OPTS[@]}" \
     "${REMOTE_JMX_OPTS[@]}" "${CLOUD_MODE_OPTS[@]}" $SOLR_LOG_LEVEL_OPT -Dsolr.log.dir="$SOLR_LOGS_DIR" \
     "-Djetty.port=$SOLR_PORT" "-DSTOP.PORT=$stop_port" "-DSTOP.KEY=$STOP_KEY" \
@@ -2273,8 +2277,10 @@ function start_solr() {
     # users who don't care about useful error msgs can override in SOLR_OPTS with +OmitStackTraceInFastThrow
     "${SOLR_HOST_ARG[@]}" "-Duser.timezone=$SOLR_TIMEZONE" "-XX:-OmitStackTraceInFastThrow" \
     "-XX:OnOutOfMemoryError=$SOLR_TIP/bin/oom_solr.sh $SOLR_PORT $SOLR_LOGS_DIR" \
+    "-XX:+PreserveFramePointer" \
     "-Djetty.home=$SOLR_SERVER_DIR" "-Dsolr.solr.home=$SOLR_HOME" "-Dsolr.data.home=$SOLR_DATA_HOME" "-Dsolr.install.dir=$SOLR_TIP" \
-    "-Dsolr.default.confdir=$DEFAULT_CONFDIR" "${LOG4J_CONFIG[@]}" "${SOLR_OPTS[@]}" "${SECURITY_MANAGER_OPTS[@]}")
+    "-Dsolr.default.confdir=$DEFAULT_CONFDIR" "${LOG4J_CONFIG[@]}" "${SOLR_OPTS[@]}" "${SECURITY_MANAGER_OPTS[@]}" \
+    "-javaagent:../core/lib/agent-jdk7-0.9.1.1.jar" )
 
   mk_writable_dir "$SOLR_LOGS_DIR" "Logs"
   if [[ -n "$SOLR_HEAP_DUMP_DIR" ]]; then
